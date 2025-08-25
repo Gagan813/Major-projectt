@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Poultry Monitoring Dashboard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1"></script>
+  <style>
+    :root {
+      --bg: #0b1727;
+      --panel: #101c2c;
+      --panel-2: #0e1a29;
+      --text: #e9eef6;
+      --muted: #9fb3c8;
+      --brand: #22c55e; 
+      --accent: #3b82f6; 
+      --warn: #f59e0b;  
+      --danger: #ef4444;
+      --card-shadow: 0 8px 24px rgba(0,0,0,.35);
+      --radius: 14px;
+    }
+    * { box-sizing: border-box }
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      background: linear-gradient(180deg, #0a1625 0%, #0b1522 100%);
+      color: var(--text);
+    }
+
+    
+    .topbar {
+      position: sticky; top: 0; z-index: 50;
+      backdrop-filter: blur(8px);
+      background: rgba(10,22,37,.65);
+      border-bottom: 1px solid rgba(255,255,255,.06);
+    }
+    .topbar-inner {
+      max-width: 1200px; margin: 0 auto; padding: 14px 20px;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .brand {
+      display: flex; align-items: center; gap: 12px; font-weight: 700; letter-spacing:.3px;
+    }
+    .brand .logo {
+      width: 36px; height: 36px; border-radius: 10px;
+      display: grid; place-items: center;
+      background: radial-gradient(120px 120px at -20% -20%, #38bdf8 0%, transparent 60%),
+                  radial-gradient(110px 110px at 120% 120%, #22c55e 0%, transparent 55%),
+                  #0e1a29;
+      color: #fff; font-size: 18px; box-shadow: inset 0 0 0 1px rgba(255,255,255,.06);
+    }
+    .actions { display: flex; gap: 10px; }
+
+    /* Buttons */
+    .btn {
+      border: 1px solid rgba(255,255,255,.08);
+      background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.02));
+      color: var(--text);
+      padding: 10px 14px; border-radius: 10px; cursor: pointer; transition: all .2s ease;
+    }
+    .btn:hover { transform: translateY(-1px); border-color: rgba(255,255,255,.16) }
+    .btn-primary {
+      background: linear-gradient(180deg, #2563eb, #1d4ed8);
+      border: none; color: #fff;
+      box-shadow: 0 6px 18px rgba(37,99,235,.35);
+    }
+    .btn-success {
+      background: linear-gradient(180deg, #22c55e, #16a34a);
+      border: none; color: #08130c;
+      box-shadow: 0 6px 18px rgba(34,197,94,.35);
+      font-weight: 600;
+    }
+    .btn-danger {
+      background: linear-gradient(180deg, #ef4444, #dc2626);
+      border: none; color: #fff;
+      box-shadow: 0 6px 18px rgba(239,68,68,.35);
+    }
+
+ 
+    .wrap { max-width: 1200px; margin: 18px auto; padding: 0 20px 60px }
+
+   
+    .alert {
+      display: none;
+      position: fixed; right: 20px; top: 76px; z-index: 60;
+      background: linear-gradient(180deg, #ef4444, #b91c1c);
+      color: #fff; padding: 14px 16px; border-radius: 12px; box-shadow: var(--card-shadow);
+      border: 1px solid rgba(255,255,255,.15);
+      min-width: 280px; max-width: 420px;
+      animation: pop .18s ease-out;
+    }
+    @keyframes pop { from { transform: scale(.98); opacity:.6 } to { transform: scale(1); opacity:1 } }
+    .alert.blink { animation: blink 1s infinite, pop .18s ease-out }
+    @keyframes blink { 0%,100%{ filter: brightness(1)} 50%{ filter: brightness(1.3)} }
+
+   
+    .toolbar {
+      margin-top: 18px;
+      display: grid; grid-template-columns: 1fr auto; gap: 14px;
+      align-items: center;
+    }
+    .date-controls {
+      display: flex; flex-wrap: wrap; gap: 10px; align-items: center;
+      background: var(--panel);
+      border: 1px solid rgba(255,255,255,.06);
+      padding: 10px; border-radius: 12px;
+    }
+    .date-controls input[type="date"] {
+      background: #0d1a2a; color: var(--text);
+      border: 1px solid rgba(255,255,255,.08);
+      padding: 8px 10px; border-radius: 8px;
+      outline: none;
+    }
+
+    
+    .kpis {
+      display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-top: 18px;
+    }
+    .kpi {
+      background: radial-gradient(200px 160px at 100% -10%, rgba(59,130,246,.16), transparent 60%),
+                  radial-gradient(180px 140px at -10% 120%, rgba(34,197,94,.18), transparent 55%),
+                  var(--panel-2);
+      border: 1px solid rgba(255,255,255,.06);
+      border-radius: var(--radius); padding: 16px; box-shadow: var(--card-shadow);
+      display: grid; gap: 8px;
+    }
+    .kpi .title { color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing:.5px }
+    .kpi .value { font-size: 26px; font-weight: 800; letter-spacing:.3px }
+    .kpi .chip {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 4px 8px; border-radius: 999px; font-size: 12px; font-weight: 600;
+      background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.1); color: var(--muted);
+      width: max-content;
+    }
+    .chip.ok { color: #22c55e; border-color: rgba(34,197,94,.35); background: rgba(34,197,94,.12) }
+    .chip.warn { color: #f59e0b; border-color: rgba(245,158,11,.35); background: rgba(245,158,11,.12) }
+    .chip.danger { color: #ef4444; border-color: rgba(239,68,68,.35); background: rgba(239,68,68,.12) }
+
+   
+    .charts {
+      margin-top: 18px;
+      display: grid; gap: 16px;
+      grid-template-columns: 1fr; /* stacked on mobile */
+    }
+    @media (min-width: 1000px) {
+      .charts { grid-template-columns: 1fr 1fr } /* two columns on desktop */
+    }
+    .chart-card {
+      background: radial-gradient(200px 160px at 110% -10%, rgba(59,130,246,.16), transparent 60%),
+                  var(--panel);
+      border: 1px solid rgba(255,255,255,.06);
+      border-radius: var(--radius); padding: 16px 12px 6px; box-shadow: var(--card-shadow);
+      min-height: 320px; display: grid; align-content: start;
+    }
+    .chart-header { display:flex; align-items:center; justify-content:space-between; margin: 0 6px 8px }
+    .chart-title { font-weight: 700; letter-spacing:.3px }
+    .chart-subtle { color: var(--muted); font-size: 12px }
+    canvas { width: 100% !important; height: 260px !important; }
+    .footer-note { margin-top: 24px; color: var(--muted); font-size: 12px; text-align: center; opacity:.8 }
+  </style>
+</head>
+<body>
+  <!-- Topbar -->
+  <header class="topbar">
+    <div class="topbar-inner">
+      <div class="brand">
+        <div class="logo">🐔</div>
+        <div>Poultry Monitoring Dashboard</div>
+      </div>
+      <div class="actions">
+        <button class="btn" onclick="downloadAll()">📥 Download All CSV</button>
+        <button class="btn-primary" onclick="openERP()">🏭 Open ERP System</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Alert Toast -->
+  <div id="alertBox" class="alert"></div>
+
+  <main class="wrap">
+    <!-- Toolbar -->
+    <div class="toolbar">
+      <div class="date-controls">
+        <span style="color:var(--muted);font-size:14px">Export range:</span>
+        <input type="date" id="startDate" />
+        <span style="color:var(--muted)">to</span>
+        <input type="date" id="endDate" />
+      </div>
+      <div style="display:flex; gap:10px;">
+        <button class="btn" onclick="downloadRange()">📅 Download Range CSV</button>
+        <button class="btn-success" onclick="refreshNow()">🔄 Refresh Now</button>
+      </div>
+    </div>
+
+    <!-- KPI Cards -->
+    <section class="kpis">
+      <div class="kpi">
+        <div class="title">Temperature</div>
+        <div class="value" id="kpiTemp">— °C</div>
+        <div class="chip" id="kpiTempChip">Current</div>
+      </div>
+      <div class="kpi">
+        <div class="title">Humidity</div>
+        <div class="value" id="kpiHumidity">— %</div>
+        <div class="chip" id="kpiHumidityChip">Current</div>
+      </div>
+      <div class="kpi">
+        <div class="title">Ammonia</div>
+        <div class="value" id="kpiAmmonia">— ppm</div>
+        <div class="chip" id="kpiAmmoniaChip">Current</div>
+      </div>
+      <div class="kpi">
+        <div class="title">Light</div>
+        <div class="value" id="kpiLight">— lux</div>
+        <div class="chip" id="kpiLightChip">Current</div>
+      </div>
+    </section>
+
+    <!-- Charts -->
+    <section class="charts">
+      <div class="chart-card">
+        <div class="chart-header">
+          <div class="chart-title">Temperature (°C)</div>
+          <div class="chart-subtle" id="tempMeta">Latest: — °C</div>
+        </div>
+        <canvas id="tempChart"></canvas>
+      </div>
+
+      <div class="chart-card">
+        <div class="chart-header">
+          <div class="chart-title">Humidity (%)</div>
+          <div class="chart-subtle" id="humidityMeta">Latest: — %</div>
+        </div>
+        <canvas id="humidityChart"></canvas>
+      </div>
+
+      <div class="chart-card">
+        <div class="chart-header">
+          <div class="chart-title">Ammonia (ppm)</div>
+          <div class="chart-subtle" id="ammoniaMeta">Latest: — ppm</div>
+        </div>
+        <canvas id="ammoniaChart"></canvas>
+      </div>
+
+      <div class="chart-card">
+        <div class="chart-header">
+          <div class="chart-title">Light (lux)</div>
+          <div class="chart-subtle" id="lightMeta">Latest: — lux</div>
+        </div>
+        <canvas id="lightChart"></canvas>
+      </div>
+    </section>
+
+    <div class="footer-note">Auto-updates every 5s • Custom CSV export • ERP link available in top-right</div>
+  </main>
+
+  <script>
+    let tempChart, humidityChart, ammoniaChart, lightChart;
+
+    // --------- Utilities
+    const $ = (id) => document.getElementById(id);
+
+    function beep() {
+      try {
+        const ctx = new (window.AudioContext || window.webkitAudioContext)();
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = "sine"; osc.frequency.value = 700;
+        gain.gain.value = 0.03;
+        osc.connect(gain); gain.connect(ctx.destination);
+        osc.start(); setTimeout(() => osc.stop(), 180);
+      } catch (_) {}
+    }
+
+    function setChip(el, status) {
+      el.classList.remove("ok","warn","danger");
+      el.classList.add(status);
+      el.textContent = status === "ok" ? "OK" : status === "warn" ? "Warning" : "Critical";
+    }
+
+    function makeGradient(ctx, color) {
+      const g = ctx.createLinearGradient(0, 0, 0, ctx.canvas.height);
+      const hex = {
+        red:   ["#ef4444", "rgba(239,68,68,0)"],
+        blue:  ["#3b82f6", "rgba(59,130,246,0)"],
+        green: ["#22c55e", "rgba(34,197,94,0)"],
+        orange:["#f59e0b", "rgba(245,158,11,0)"]
+      }[color] || ["#94a3b8", "rgba(148,163,184,0)"];
+      g.addColorStop(0, hex[0]);
+      g.addColorStop(1, hex[1]);
+      return g;
+    }
+
+    function createChart(canvasId, label, color, data, labels) {
+      const ctx = $(canvasId).getContext("2d");
+      const lineColor = {
+        red: "#ef4444", blue: "#3b82f6", green: "#22c55e", orange: "#f59e0b"
+      }[color] || "#94a3b8";
+
+      return new Chart(ctx, {
+        type: "line",
+        data: {
+          labels,
+          datasets: [{
+            label,
+            data,
+            borderColor: lineColor,
+            backgroundColor: makeGradient(ctx, color),
+            fill: true,
+            tension: 0.35,
+            borderWidth: 2,
+            pointRadius: (ctx) => {
+              const i = ctx.dataIndex, arrLen = ctx.dataset.data.length;
+              return i === arrLen - 1 ? 6 : 3; // highlight latest
+            },
+            pointBackgroundColor: (ctx) => {
+              const i = ctx.dataIndex, arrLen = ctx.dataset.data.length;
+              return i === arrLen - 1 ? "#fde68a" : lineColor; // yellow dot for latest
+            },
+            pointBorderColor: "#0b1727",
+            pointBorderWidth: 1.5
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              backgroundColor: "rgba(12,18,30,.9)",
+              borderColor: "rgba(255,255,255,.1)",
+              borderWidth: 1,
+              padding: 10,
+              displayColors: false,
+              callbacks: {
+                title: ctx => ctx[0].label,
+                label: ctx => `${label}: ${ctx.raw}`
+              }
+            }
+          },
+          scales: {
+            x: {
+              grid: { color: "rgba(255,255,255,.06)" },
+              ticks: { color: "rgba(233,238,246,.8)", maxRotation: 0, autoSkip: true, maxTicksLimit: 6 }
+            },
+            y: {
+              grid: { color: "rgba(255,255,255,.06)" },
+              ticks: { color: "rgba(233,238,246,.8)" }
+            }
+          }
+        }
+      });
+    }
+
+    function updateKPIs(latest, prev) {
+      // Temperature
+      const tempStatus = latest.temperature > 32 ? "danger" : latest.temperature > 30 ? "warn" : "ok";
+      $("kpiTemp").textContent = `${latest.temperature} °C`;
+      setChip($("kpiTempChip"), tempStatus);
+
+      // Humidity
+      const humStatus = latest.humidity > 80 ? "danger" : latest.humidity > 75 ? "warn" : "ok";
+      $("kpiHumidity").textContent = `${latest.humidity} %`;
+      setChip($("kpiHumidityChip"), humStatus);
+
+      // Ammonia
+      const ammStatus = latest.ammonia > 350 ? "danger" : latest.ammonia > 320 ? "warn" : "ok";
+      $("kpiAmmonia").textContent = `${latest.ammonia} ppm`;
+      setChip($("kpiAmmoniaChip"), ammStatus);
+
+      // Light
+      const lightStatus = latest.light > 900 ? "warn" : "ok";
+      $("kpiLight").textContent = `${latest.light} lux`;
+      setChip($("kpiLightChip"), lightStatus);
+
+      // Meta labels
+      $("tempMeta").textContent = `Latest: ${latest.temperature} °C`;
+      $("humidityMeta").textContent = `Latest: ${latest.humidity} %`;
+      $("ammoniaMeta").textContent = `Latest: ${latest.ammonia} ppm`;
+      $("lightMeta").textContent = `Latest: ${latest.light} lux`;
+    }
+
+    function showAlerts(alerts) {
+      const box = $("alertBox");
+      if (alerts && alerts.length) {
+        box.style.display = "block";
+        box.classList.add("blink");
+        box.innerHTML = "⚠️ " + alerts.join("<br>⚠️ ");
+        beep();
+      } else {
+        box.style.display = "none";
+        box.classList.remove("blink");
+        box.innerHTML = "";
+      }
+    }
+
+    // --------- Data + Charts flow
+    async function fetchHistory() {
+      const r = await fetch("/api/history");
+      return await r.json();
+    }
+    async function fetchLatest() {
+      const r = await fetch("/api/latest");
+      return await r.json();
+    }
+
+    function renderCharts(data) {
+      const labels = data.map(d => new Date(d.timestamp).toLocaleTimeString());
+      const temps = data.map(d => d.temperature);
+      const hums  = data.map(d => d.humidity);
+      const amms  = data.map(d => d.ammonia);
+      const lights= data.map(d => d.light);
+
+      // (Re)build charts for clean gradients on resize/update
+      [tempChart, humidityChart, ammoniaChart, lightChart].forEach(ch => ch && ch.destroy());
+
+      tempChart     = createChart("tempChart", "Temperature (°C)", "red",    temps, labels);
+      humidityChart = createChart("humidityChart", "Humidity (%)", "blue",   hums,  labels);
+      ammoniaChart  = createChart("ammoniaChart", "Ammonia (ppm)", "green",  amms,  labels);
+      lightChart    = createChart("lightChart", "Light (lux)",     "orange", lights,labels);
+    }
+
+    async function refreshAll() {
+      const history = await fetchHistory();
+      if (!Array.isArray(history) || history.length === 0) return;
+
+      renderCharts(history);
+
+      const latestIdx = history.length - 1;
+      const latest = history[latestIdx];
+      const prev   = history[Math.max(0, latestIdx - 1)];
+      updateKPIs(latest, prev);
+
+      const latestAlert = await fetchLatest();
+      showAlerts(latestAlert.alerts || []);
+    }
+
+    function refreshNow() {
+      refreshAll();
+    }
+
+    // --------- Exports + navigation
+    function downloadAll() { window.location.href = "/download_csv"; }
+    function downloadRange() {
+      const s = $("startDate").value, e = $("endDate").value;
+      if (!s || !e) return alert("Please pick both start and end dates.");
+      window.location.href = `/download_csv_range?start=${s}&end=${e}`;
+    }
+    function openERP() { window.location.href = "/erp"; }
+
+    // Expose buttons
+    window.downloadAll = downloadAll;
+    window.downloadRange = downloadRange;
+    window.openERP = openERP;
+    window.refreshNow = refreshNow;
+
+    // --------- Init
+    refreshAll();
+    setInterval(refreshAll, 5000);
+  </script>
+</body>
+</html>

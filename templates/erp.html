@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Poultry ERP – Inventory</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    :root {
+      --bg:#0b1727; --panel:#101c2c; --panel2:#0e1a29; --text:#e9eef6; --muted:#9fb3c8;
+      --brand:#22c55e; --danger:#ef4444; --warn:#f59e0b; --accent:#3b82f6;
+      --radius:14px; --shadow:0 10px 24px rgba(0,0,0,.35);
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0; font-family: system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+      background: linear-gradient(180deg,#0a1625,#0b1522); color:var(--text);
+    }
+    header{
+      position:sticky;top:0;z-index:10;
+      display:flex;justify-content:space-between;align-items:center;
+      padding:16px 20px; backdrop-filter: blur(8px);
+      background: rgba(10,22,37,.65); border-bottom:1px solid rgba(255,255,255,.06);
+    }
+    .brand{display:flex;align-items:center;gap:10px;font-weight:800}
+    .logo{width:36px;height:36px;border-radius:10px;display:grid;place-items:center;
+      background: radial-gradient(120px 120px at -20% -20%, #38bdf8 0%, transparent 60%),
+                  radial-gradient(110px 110px at 120% 120%, #22c55e 0%, transparent 55%),
+                  #0e1a29;}
+    .actions{display:flex;gap:10px}
+    .btn{
+      border:1px solid rgba(255,255,255,.08); color:var(--text); cursor:pointer;
+      padding:10px 14px; border-radius:10px; background:linear-gradient(180deg,rgba(255,255,255,.06),rgba(255,255,255,.02));
+    }
+    .btn:hover{transform:translateY(-1px);border-color:rgba(255,255,255,.16)}
+    .btn-primary{background:linear-gradient(180deg,#2563eb,#1d4ed8);border:none;color:#fff}
+    .btn-success{background:linear-gradient(180deg,#22c55e,#16a34a);border:none;color:#06210f;font-weight:700}
+    .btn-danger{background:linear-gradient(180deg,#ef4444,#dc2626);border:none;color:#fff}
+    .wrap{max-width:1100px;margin:18px auto;padding:0 16px 48px}
+    .row{display:grid;grid-template-columns:1fr;gap:16px}
+    @media(min-width:980px){.row{grid-template-columns: 360px 1fr}}
+    .card{
+      background: radial-gradient(200px 160px at 110% -10%, rgba(59,130,246,.16), transparent 60%), var(--panel);
+      border:1px solid rgba(255,255,255,.06); border-radius:var(--radius); box-shadow:var(--shadow);
+      padding:16px;
+    }
+    h2{margin:6px 0 12px 0}
+    label{font-size:13px;color:var(--muted)}
+    input,select{
+      width:100%; padding:10px 12px; margin-top:6px; margin-bottom:12px;
+      border-radius:10px; outline:none; background:#0d1a2a; color:var(--text);
+      border:1px solid rgba(255,255,255,.08);
+    }
+    table{width:100%; border-collapse:collapse; margin-top:8px}
+    th,td{padding:10px 8px; text-align:left; border-bottom:1px solid rgba(255,255,255,.08)}
+    th{color:var(--muted); font-weight:600}
+    .chip{font-size:12px; padding:4px 8px; border-radius:999px; border:1px solid rgba(255,255,255,.12); width:max-content}
+    .chip.low{background: rgba(239,68,68,.1); border-color: rgba(239,68,68,.35); color:#fecaca}
+    .chip.ok{background: rgba(34,197,94,.1); border-color: rgba(34,197,94,.35); color:#bbf7d0}
+    .row-actions{display:flex; gap:6px; flex-wrap:wrap}
+    .qty-form{display:flex; gap:6px}
+    .qty-form input{width:110px}
+    .hint{color:var(--muted); font-size:12px; margin-top:8px}
+    .banner{
+      background:linear-gradient(180deg,#1f2937,#111827);
+      border:1px solid rgba(255,255,255,.08); border-radius:12px; padding:10px 12px;
+      display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:12px
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="brand">
+      <div class="logo">🐓</div>
+      <div>Poultry ERP – Inventory</div>
+    </div>
+    <div class="actions">
+      <a class="btn" href="/">⬅ Back to Monitoring</a>
+      <a class="btn-primary" href="/erp/inventory/export">📥 Export Inventory CSV</a>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <div class="banner">
+      <div>
+        <strong>Inventory Overview</strong>
+        <div class="hint">Low-stock items are flagged automatically when Quantity ≤ Reorder Level.</div>
+      </div>
+      <div class="chip {{ 'low' if (low_stock or 0) > 0 else 'ok' }}">
+        {{ low_stock or 0 }} low-stock
+      </div>
+    </div>
+
+    <div class="row">
+      <!-- Add Item -->
+      <section class="card">
+        <h2>Add New Item</h2>
+        <form method="POST" action="/erp/inventory/add">
+          <label>Item Name</label>
+          <input name="name" required placeholder="e.g., Layer Feed 20kg" />
+
+          <label>Category</label>
+          <select name="category">
+            <option value="feed">Feed</option>
+            <option value="medicine">Medicine</option>
+            <option value="supplies">Supplies</option>
+            <option value="other">Other</option>
+          </select>
+
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+            <div>
+              <label>Quantity</label>
+              <input name="quantity" type="number" step="0.01" value="0" />
+            </div>
+            <div>
+              <label>Unit</label>
+              <input name="unit" placeholder="kg, bags, L, pcs" required />
+            </div>
+          </div>
+
+          <label>Reorder Level</label>
+          <input name="reorder_level" type="number" step="0.01" value="0" />
+
+          <button class="btn-success" type="submit">➕ Add Item</button>
+        </form>
+      </section>
+
+      <!-- Inventory Table -->
+      <section class="card">
+        <h2>Inventory</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Item</th>
+              <th>Category</th>
+              <th>Qty</th>
+              <th>Unit</th>
+              <th>Reorder</th>
+              <th>Updated</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+          {% if inventory and inventory|length > 0 %}
+            {% for r in inventory %}
+              {% set low = (r[3] <= r[5]) %}
+              <tr style="{{ 'background: rgba(239,68,68,.06)' if low else '' }}">
+                <td>{{ r[0] }}</td>
+                <td>{{ r[1] }}</td>
+                <td style="text-transform:capitalize">{{ r[2] }}</td>
+                <td><strong>{{ '%.2f'|format(r[3]) }}</strong></td>
+                <td>{{ r[4] }}</td>
+                <td>{{ '%.2f'|format(r[5]) }}</td>
+                <td><span class="hint">{{ r[6] }}</span></td>
+                <td>
+                  <div class="row-actions">
+                    <form class="qty-form" method="POST" action="/erp/inventory/increase/{{ r[0] }}">
+                      <input name="delta" type="number" step="0.01" placeholder="+ amount" />
+                      <button class="btn" type="submit">Add</button>
+                    </form>
+                    <form class="qty-form" method="POST" action="/erp/inventory/decrease/{{ r[0] }}">
+                      <input name="delta" type="number" step="0.01" placeholder="- amount" />
+                      <button class="btn-danger" type="submit">Use</button>
+                    </form>
+                    <form method="POST" action="/erp/inventory/delete/{{ r[0] }}" onsubmit="return confirm('Delete this item?')">
+                      <button class="btn" type="submit">🗑 Delete</button>
+                    </form>
+                  </div>
+                </td>
+              </tr>
+            {% endfor %}
+          {% else %}
+            <tr><td colspan="8" class="hint">No items yet. Add your first inventory item on the left.</td></tr>
+          {% endif %}
+          </tbody>
+        </table>
+      </section>
+    </div>
+  </main>
+</body>
+</html>
