@@ -1,181 +1,265 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>Poultry ERP – Inventory</title>
+  <meta charset="utf-8" />
+  <title>My Stock & Sales (Farmer ERP)</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
-    :root {
-      --bg:#0b1727; --panel:#101c2c; --panel2:#0e1a29; --text:#e9eef6; --muted:#9fb3c8;
-      --brand:#22c55e; --danger:#ef4444; --warn:#f59e0b; --accent:#3b82f6;
-      --radius:14px; --shadow:0 10px 24px rgba(0,0,0,.35);
-    }
+    :root{--bg:#0b1727;--panel:#101c2c;--panel2:#0e1a29;--text:#e9eef6;--muted:#9fb3c8;--brand:#22c55e;--accent:#3b82f6;--danger:#ef4444;--warn:#f59e0b;--radius:14px;--shadow:0 10px 28px rgba(0,0,0,.35)}
     *{box-sizing:border-box}
-    body{
-      margin:0; font-family: system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
-      background: linear-gradient(180deg,#0a1625,#0b1522); color:var(--text);
-    }
-    header{
-      position:sticky;top:0;z-index:10;
-      display:flex;justify-content:space-between;align-items:center;
-      padding:16px 20px; backdrop-filter: blur(8px);
-      background: rgba(10,22,37,.65); border-bottom:1px solid rgba(255,255,255,.06);
-    }
-    .brand{display:flex;align-items:center;gap:10px;font-weight:800}
-    .logo{width:36px;height:36px;border-radius:10px;display:grid;place-items:center;
-      background: radial-gradient(120px 120px at -20% -20%, #38bdf8 0%, transparent 60%),
-                  radial-gradient(110px 110px at 120% 120%, #22c55e 0%, transparent 55%),
-                  #0e1a29;}
-    .actions{display:flex;gap:10px}
-    .btn{
-      border:1px solid rgba(255,255,255,.08); color:var(--text); cursor:pointer;
-      padding:10px 14px; border-radius:10px; background:linear-gradient(180deg,rgba(255,255,255,.06),rgba(255,255,255,.02));
-    }
-    .btn:hover{transform:translateY(-1px);border-color:rgba(255,255,255,.16)}
+    body{margin:0;background:linear-gradient(180deg,#0a1625,#0b1522);color:var(--text);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
+    .wrap{max-width:1200px;margin:20px auto;padding:0 16px 80px}
+    .top{display:flex;align-items:center;justify-content:space-between;gap:12px}
+    .title{font-weight:800;font-size:22px;letter-spacing:.3px}
+    .btn{border:1px solid rgba(255,255,255,.08);background:linear-gradient(180deg,rgba(255,255,255,.06),rgba(255,255,255,.02));padding:10px 14px;border-radius:10px;color:var(--text);cursor:pointer}
+    .btn:hover{transform:translateY(-1px)}
     .btn-primary{background:linear-gradient(180deg,#2563eb,#1d4ed8);border:none;color:#fff}
-    .btn-success{background:linear-gradient(180deg,#22c55e,#16a34a);border:none;color:#06210f;font-weight:700}
+    .btn-success{background:linear-gradient(180deg,#22c55e,#16a34a);border:none;color:#08130c;font-weight:700}
     .btn-danger{background:linear-gradient(180deg,#ef4444,#dc2626);border:none;color:#fff}
-    .wrap{max-width:1100px;margin:18px auto;padding:0 16px 48px}
-    .row{display:grid;grid-template-columns:1fr;gap:16px}
-    @media(min-width:980px){.row{grid-template-columns: 360px 1fr}}
-    .card{
-      background: radial-gradient(200px 160px at 110% -10%, rgba(59,130,246,.16), transparent 60%), var(--panel);
-      border:1px solid rgba(255,255,255,.06); border-radius:var(--radius); box-shadow:var(--shadow);
-      padding:16px;
-    }
-    h2{margin:6px 0 12px 0}
-    label{font-size:13px;color:var(--muted)}
-    input,select{
-      width:100%; padding:10px 12px; margin-top:6px; margin-bottom:12px;
-      border-radius:10px; outline:none; background:#0d1a2a; color:var(--text);
-      border:1px solid rgba(255,255,255,.08);
-    }
-    table{width:100%; border-collapse:collapse; margin-top:8px}
-    th,td{padding:10px 8px; text-align:left; border-bottom:1px solid rgba(255,255,255,.08)}
-    th{color:var(--muted); font-weight:600}
-    .chip{font-size:12px; padding:4px 8px; border-radius:999px; border:1px solid rgba(255,255,255,.12); width:max-content}
-    .chip.low{background: rgba(239,68,68,.1); border-color: rgba(239,68,68,.35); color:#fecaca}
-    .chip.ok{background: rgba(34,197,94,.1); border-color: rgba(34,197,94,.35); color:#bbf7d0}
-    .row-actions{display:flex; gap:6px; flex-wrap:wrap}
-    .qty-form{display:flex; gap:6px}
-    .qty-form input{width:110px}
-    .hint{color:var(--muted); font-size:12px; margin-top:8px}
-    .banner{
-      background:linear-gradient(180deg,#1f2937,#111827);
-      border:1px solid rgba(255,255,255,.08); border-radius:12px; padding:10px 12px;
-      display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:12px
-    }
+    .grid{display:grid;gap:16px;margin-top:16px}
+    @media(min-width:1000px){.grid{grid-template-columns:2fr 1fr}}
+    .card{background:var(--panel);border:1px solid rgba(255,255,255,.06);border-radius:var(--radius);box-shadow:var(--shadow);padding:14px}
+    .card h3{margin:6px 0 12px 0}
+    .row{display:grid;grid-template-columns:repeat(6,1fr);gap:8px}
+    .row-compact{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+    .row .full{grid-column:1/-1}
+    input,select{width:100%;padding:10px;border-radius:10px;border:1px solid rgba(255,255,255,.08);background:#0d1a2a;color:var(--text)}
+    table{width:100%;border-collapse:separate;border-spacing:0 8px}
+    th,td{text-align:left;padding:10px}
+    thead th{color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.4px}
+    tbody tr{background:var(--panel2);border:1px solid rgba(255,255,255,.06)}
+    tbody tr td:first-child{border-top-left-radius:12px;border-bottom-left-radius:12px}
+    tbody tr td:last-child{border-top-right-radius:12px;border-bottom-right-radius:12px}
+    .chip{display:inline-flex;align-items:center;gap:6px;padding:4px 8px;border-radius:999px;font-size:12px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.06)}
+    .chip.ok{color:#22c55e;border-color:rgba(34,197,94,.35);background:rgba(34,197,94,.12)}
+    .chip.warn{color:#f59e0b;border-color:rgba(245,158,11,.35);background:rgba(245,158,11,.12)}
+    .chip.danger{color:#ef4444;border-color:rgba(239,68,68,.35);background:rgba(239,68,68,.12)}
+    .muted{color:var(--muted)}
+    .right{display:flex;gap:8px;align-items:center;justify-content:flex-end}
+    .sum{display:flex;gap:12px;flex-wrap:wrap}
+    .sum .box{background:var(--panel2);border:1px solid rgba(255,255,255,.06);padding:10px 12px;border-radius:12px}
+    a{color:#93c5fd;text-decoration:none}
   </style>
 </head>
 <body>
-  <header>
-    <div class="brand">
-      <div class="logo">🐓</div>
-      <div>Poultry ERP – Inventory</div>
-    </div>
-    <div class="actions">
-      <a class="btn" href="/">⬅ Back to Monitoring</a>
-      <a class="btn-primary" href="/erp/inventory/export">📥 Export Inventory CSV</a>
-    </div>
-  </header>
-
-  <main class="wrap">
-    <div class="banner">
-      <div>
-        <strong>Inventory Overview</strong>
-        <div class="hint">Low-stock items are flagged automatically when Quantity ≤ Reorder Level.</div>
-      </div>
-      <div class="chip {{ 'low' if (low_stock or 0) > 0 else 'ok' }}">
-        {{ low_stock or 0 }} low-stock
+  <div class="wrap">
+    <div class="top">
+      <div class="title">🧮 My Stock & Sales</div>
+      <div class="right">
+        <a class="btn" href="/erp/inventory/export_csv">📥 Stock CSV</a>
+        <a class="btn" href="/erp/transactions/export_csv">📥 Sales/Purchase CSV</a>
+        <a class="btn" href="/">📊 Monitoring Dashboard</a>
       </div>
     </div>
 
-    <div class="row">
-      <!-- Add Item -->
-      <section class="card">
-        <h2>Add New Item</h2>
-        <form method="POST" action="/erp/inventory/add">
-          <label>Item Name</label>
-          <input name="name" required placeholder="e.g., Layer Feed 20kg" />
-
-          <label>Category</label>
-          <select name="category">
-            <option value="feed">Feed</option>
-            <option value="medicine">Medicine</option>
-            <option value="supplies">Supplies</option>
-            <option value="other">Other</option>
-          </select>
-
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-            <div>
-              <label>Quantity</label>
-              <input name="quantity" type="number" step="0.01" value="0" />
-            </div>
-            <div>
-              <label>Unit</label>
-              <input name="unit" placeholder="kg, bags, L, pcs" required />
-            </div>
-          </div>
-
-          <label>Reorder Level</label>
-          <input name="reorder_level" type="number" step="0.01" value="0" />
-
-          <button class="btn-success" type="submit">➕ Add Item</button>
+    <div class="sum" style="margin-top:14px">
+      <div class="box">Items: <b>{{ total_items }}</b></div>
+      <div class="box">Low/Empty: <b>{{ low_stock }}</b></div>
+      <div class="box">Stock Value: <b>₹ {{ '%.2f' % inv_value }}</b></div>
+      <div class="box">Find:
+        <form method="get" action="/erp" style="display:inline">
+          <input name="q" placeholder="Search by name / code / type" value="{{ query or '' }}" />
         </form>
-      </section>
-
-      <!-- Inventory Table -->
-      <section class="card">
-        <h2>Inventory</h2>
-        <table>
-          <thead>
-            <tr>
-              <th>#</th>
-              <th>Item</th>
-              <th>Category</th>
-              <th>Qty</th>
-              <th>Unit</th>
-              <th>Reorder</th>
-              <th>Updated</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-          {% if inventory and inventory|length > 0 %}
-            {% for r in inventory %}
-              {% set low = (r[3] <= r[5]) %}
-              <tr style="{{ 'background: rgba(239,68,68,.06)' if low else '' }}">
-                <td>{{ r[0] }}</td>
-                <td>{{ r[1] }}</td>
-                <td style="text-transform:capitalize">{{ r[2] }}</td>
-                <td><strong>{{ '%.2f'|format(r[3]) }}</strong></td>
-                <td>{{ r[4] }}</td>
-                <td>{{ '%.2f'|format(r[5]) }}</td>
-                <td><span class="hint">{{ r[6] }}</span></td>
-                <td>
-                  <div class="row-actions">
-                    <form class="qty-form" method="POST" action="/erp/inventory/increase/{{ r[0] }}">
-                      <input name="delta" type="number" step="0.01" placeholder="+ amount" />
-                      <button class="btn" type="submit">Add</button>
-                    </form>
-                    <form class="qty-form" method="POST" action="/erp/inventory/decrease/{{ r[0] }}">
-                      <input name="delta" type="number" step="0.01" placeholder="- amount" />
-                      <button class="btn-danger" type="submit">Use</button>
-                    </form>
-                    <form method="POST" action="/erp/inventory/delete/{{ r[0] }}" onsubmit="return confirm('Delete this item?')">
-                      <button class="btn" type="submit">🗑 Delete</button>
-                    </form>
-                  </div>
-                </td>
-              </tr>
-            {% endfor %}
-          {% else %}
-            <tr><td colspan="8" class="hint">No items yet. Add your first inventory item on the left.</td></tr>
-          {% endif %}
-          </tbody>
-        </table>
-      </section>
+      </div>
     </div>
-  </main>
+
+    <div class="grid">
+      <div class="card">
+        <h3>Add Item (Code auto-fills)</h3>
+        <form method="post" action="/erp/inventory/add">
+          <div class="row">
+            <input name="name" placeholder="Item name (e.g., Chicken Feed)" required />
+            <input name="sku" placeholder="Item code (leave empty for auto)" />
+            <input name="category" placeholder="Type (Feed / Medicine / Other)" />
+            <input name="unit" placeholder="Unit (kg / pcs / L)" />
+            <input name="unit_factor" type="number" step="0.0001" placeholder="Unit Factor to base" value="1" />
+            <input name="quantity" type="number" step="0.0001" placeholder="Opening Qty" value="0" />
+            <input name="avg_cost" type="number" step="0.01" placeholder="Opening Avg Price" value="0" />
+            <input name="reorder_level" type="number" step="0.0001" placeholder="Buy when below" value="0" />
+            <input name="target_level" type="number" step="0.0001" placeholder="Target level" value="0" />
+          </div>
+          <div class="right" style="margin-top:10px">
+            <button class="btn-success" type="submit">➕ Save Item</button>
+          </div>
+        </form>
+        <div class="muted" style="margin-top:8px">Example: If 1 bag = 50 kg, set unit="bag", unit factor=50. Numbers stay simple.</div>
+      </div>
+
+      <div class="card">
+        <h3>Quick Buy / Sell</h3>
+        <form method="post" action="/erp/transactions/add">
+          <div class="row-compact">
+            <select name="item_id" required>
+              <option value="">Choose item</option>
+              {% for r in items %}
+              <option value="{{ r[0] }}">{{ r[1] }} {% if r[2] %}({{ r[2] }}){% endif %}</option>
+              {% endfor %}
+            </select>
+            <select name="type" id="tx_type" required>
+              <option value="purchase">Buy (Purchase)</option>
+              <option value="sale">Sell (Sale)</option>
+              <option value="adjustment">Adjust (+/-)</option>
+            </select>
+            <input name="quantity" type="number" step="0.0001" placeholder="Qty" required />
+          </div>
+          <div class="row-compact" style="margin-top:8px">
+            <input name="unit_price" id="unit_price" type="number" step="0.01" placeholder="Price per unit" />
+            <input name="party" placeholder="From/To (optional)" />
+            <input name="note" placeholder="Note (optional)" />
+          </div>
+          <div class="right" style="margin-top:10px">
+            <div id="calc" class="muted" style="margin-right:auto">Total: ₹ 0.00</div>
+            <button class="btn-primary" type="submit">💾 Save</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:16px">
+      <h3>My Stock</h3>
+      <div class="muted" style="margin-bottom:8px">Click headers to sort. “Buy this much” tells how much to reach your target.</div>
+      <table id="invTable">
+        <thead>
+          <tr>
+            <th>Item</th>
+            <th>Code</th>
+            <th>Type</th>
+            <th>Qty</th>
+            <th>Unit</th>
+            <th>Buy when below</th>
+            <th>Target</th>
+            <th>Avg Price</th>
+            <th>Value</th>
+            <th>Status</th>
+            <th class="right">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for r in items %}
+          {% set qty = (r[6] or 0) %}
+          {% set avg = (r[9] or 0) %}
+          {% set value = qty * avg %}
+          {% set reorder = (r[7] or 0) %}
+          {% set target = (r[8] or 0) %}
+          {% set unit = r[4] or '' %}
+          {% set status = 'ok' if qty>reorder else ('warn' if qty>0 else 'danger') %}
+          <tr>
+            <td><b>{{ r[1] }}</b></td>
+            <td class="muted">{{ r[2] or '' }}</td>
+            <td>{{ r[3] or '' }}</td>
+            <td>{{ '%.4f' % qty }}</td>
+            <td>{{ unit }}</td>
+            <td>{{ '%.4f' % reorder }}</td>
+            <td>{{ '%.4f' % target }}</td>
+            <td>₹ {{ '%.2f' % avg }}</td>
+            <td>₹ {{ '%.2f' % value }}</td>
+            <td>
+              <span class="chip {{ status }}">
+                {% if status=='ok' %}OK{% elif status=='warn' %}Low{% else %}Out{% endif %}
+              </span>
+              {% if target and qty < target %}
+              <div class="muted">Buy this much: {{ '%.4f' % (target-qty) }} {{ unit }}</div>
+              {% endif %}
+            </td>
+            <td>
+              <form method="post" action="/erp/inventory/increase/{{ r[0] }}" style="display:inline-flex;gap:6px">
+                <input name="delta" type="number" step="0.0001" placeholder="+Qty" style="width:90px" />
+                <input name="unit_price" type="number" step="0.01" placeholder="Price" style="width:90px" />
+                <button class="btn-success" type="submit">Buy</button>
+              </form>
+              <form method="post" action="/erp/inventory/decrease/{{ r[0] }}" style="display:inline-flex;gap:6px;margin-top:6px">
+                <input name="delta" type="number" step="0.0001" placeholder="-Qty" style="width:90px" />
+                <input name="unit_price" type="number" step="0.01" placeholder="Price" style="width:90px" />
+                <button class="btn-danger" type="submit">Sell</button>
+              </form>
+              <details style="margin-top:6px">
+                <summary class="muted">Edit</summary>
+                <form method="post" action="/erp/inventory/edit/{{ r[0] }}" style="display:grid;gap:6px;margin-top:6px">
+                  <input name="name" value="{{ r[1] }}" placeholder="Name" required />
+                  <input name="sku" value="{{ r[2] or '' }}" placeholder="Item code" />
+                  <input name="category" value="{{ r[3] or '' }}" placeholder="Type" />
+                  <input name="unit" value="{{ r[4] or '' }}" placeholder="Unit" />
+                  <input name="unit_factor" type="number" step="0.0001" value="{{ r[5] or 1 }}" placeholder="Unit Factor" />
+                  <div class="row-compact">
+                    <input name="reorder_level" type="number" step="0.0001" value="{{ r[7] or 0 }}" placeholder="Buy when below" />
+                    <input name="target_level" type="number" step="0.0001" value="{{ r[8] or 0 }}" placeholder="Target" />
+                    <button class="btn-primary" type="submit">Save</button>
+                  </div>
+                </form>
+                <form method="post" action="/erp/inventory/delete/{{ r[0] }}" onsubmit="return confirm('Delete this item?')" style="margin-top:6px">
+                  <button class="btn" type="submit">🗑️ Delete</button>
+                </form>
+              </details>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <div class="card" style="margin-top:16px">
+      <h3>Recent Purchases & Sales</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>ID</th><th>Time</th><th>Item</th><th>Code</th><th>Type</th><th>Qty</th><th>Unit Price</th><th>Total</th><th>Profit</th><th>From/To</th><th>Note</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for t in last_tx %}
+          <tr>
+            <td>{{ t[0] }}</td>
+            <td class="muted">{{ t[1] }}</td>
+            <td>{{ t[2] }}</td>
+            <td class="muted">{{ t[3] or '' }}</td>
+            <td>{{ t[4] }}</td>
+            <td>{{ '%.4f' % (t[5] or 0) }}</td>
+            <td>₹ {{ '%.2f' % (t[6] or 0) }}</td>
+            <td>₹ {{ '%.2f' % (t[7] or 0) }}</td>
+            <td>₹ {{ '%.2f' % (t[8] or 0) }}</td>
+            <td>{{ t[9] or '' }}</td>
+            <td>{{ t[10] or '' }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <div style="text-align:center;margin-top:18px" class="muted">
+      Tip: Just enter Buy or Sell. Average price, stock value and profit are automatic. Item code fills itself.
+    </div>
+  </div>
+
+  <script>
+    const qty = document.querySelector('input[name="quantity"]');
+    const price = document.querySelector('#unit_price');
+    const calc = document.querySelector('#calc');
+    function updateTotal(){
+      const q = parseFloat(qty?.value||0);
+      const p = parseFloat(price?.value||0);
+      calc.textContent = "Total: ₹ " + (q*p).toFixed(2);
+    }
+    qty?.addEventListener('input', updateTotal);
+    price?.addEventListener('input', updateTotal);
+
+    document.querySelectorAll('#invTable thead th').forEach((th, idx)=>{
+      th.style.cursor='pointer';
+      th.addEventListener('click', ()=>{
+        const tbody = document.querySelector('#invTable tbody');
+        const rows = Array.from(tbody.querySelectorAll('tr'));
+        const dir = th.dataset.dir === 'asc' ? 'desc' : 'asc';
+        th.dataset.dir = dir;
+        rows.sort((a,b)=>{
+          const A = a.children[idx].innerText.replace(/[₹,]/g,'');
+          const B = b.children[idx].innerText.replace(/[₹,]/g,'');
+          const aNum = parseFloat(A); const bNum = parseFloat(B);
+          const bothNum = !isNaN(aNum) && !isNaN(bNum);
+          if(bothNum){ return dir==='asc' ? aNum-bNum : bNum-aNum; }
+          return dir==='asc' ? A.localeCompare(B) : B.localeCompare(A);
+        });
+        rows.forEach(r=>tbody.appendChild(r));
+      });
+    });
+  </script>
 </body>
 </html>
