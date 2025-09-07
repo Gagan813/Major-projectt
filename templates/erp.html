@@ -46,9 +46,11 @@
     <div class="top">
       <div class="title">🧮 My Stock & Sales</div>
       <div class="right">
-        <a class="btn" href="/erp/inventory/export_csv">📥 Stock CSV</a>
-        <a class="btn" href="/erp/transactions/export_csv">📥 Sales/Purchase CSV</a>
+        <!-- UPDATED EXPORT BUTTONS -->
+        <a class="btn" href="{{ url_for('erp_inventory_export_excel') }}">📥 Stock Excel</a>
+        <a class="btn" href="{{ url_for('erp_tx_export_excel') }}">📥 Sales/Purchase Excel</a>
         <a class="btn" href="/">📊 Monitoring Dashboard</a>
+        <a href="{{ url_for('erp_order_page') }}" class="btn btn-primary">Order Stock</a>
       </div>
     </div>
 
@@ -63,6 +65,7 @@
       </div>
     </div>
 
+    <!-- GRID: Add Item + Quick Buy/Sell -->
     <div class="grid">
       <div class="card">
         <h3>Add Item (Code auto-fills)</h3>
@@ -115,6 +118,7 @@
       </div>
     </div>
 
+    <!-- STOCK TABLE -->
     <div class="card" style="margin-top:16px">
       <h3>My Stock</h3>
       <div class="muted" style="margin-bottom:8px">Click headers to sort. “Buy this much” tells how much to reach your target.</div>
@@ -173,21 +177,22 @@
                 <button class="btn-danger" type="submit">Sell</button>
               </form>
               <details style="margin-top:6px">
-                <summary class="muted">Edit</summary>
-                <form method="post" action="/erp/inventory/edit/{{ r[0] }}" style="display:grid;gap:6px;margin-top:6px">
-                  <input name="name" value="{{ r[1] }}" placeholder="Name" required />
-                  <input name="sku" value="{{ r[2] or '' }}" placeholder="Item code" />
-                  <input name="category" value="{{ r[3] or '' }}" placeholder="Type" />
-                  <input name="unit" value="{{ r[4] or '' }}" placeholder="Unit" />
-                  <input name="unit_factor" type="number" step="0.0001" value="{{ r[5] or 1 }}" placeholder="Unit Factor" />
-                  <div class="row-compact">
-                    <input name="reorder_level" type="number" step="0.0001" value="{{ r[7] or 0 }}" placeholder="Buy when below" />
-                    <input name="target_level" type="number" step="0.0001" value="{{ r[8] or 0 }}" placeholder="Target" />
-                    <button class="btn-primary" type="submit">Save</button>
+                <summary class="muted" style="cursor:pointer">Edit / Delete</summary>
+                <form method="post" action="/erp/inventory/edit/{{ r[0] }}" style="margin-top:6px">
+                  <input name="name" value="{{ r[1] }}" required />
+                  <input name="sku" value="{{ r[2] }}" />
+                  <input name="category" value="{{ r[3] }}" />
+                  <input name="unit" value="{{ r[4] }}" />
+                  <input name="unit_factor" type="number" step="0.0001" value="{{ r[5] or 1 }}" />
+                  <input name="reorder_level" type="number" step="0.0001" value="{{ r[7] or 0 }}" />
+                  <input name="target_level" type="number" step="0.0001" value="{{ r[8] or 0 }}" />
+                  <input name="avg_cost" type="number" step="0.01" value="{{ r[9] or 0 }}" />
+                  <div class="right" style="margin-top:4px">
+                    <button class="btn-success" type="submit">💾 Save</button>
                   </div>
                 </form>
-                <form method="post" action="/erp/inventory/delete/{{ r[0] }}" onsubmit="return confirm('Delete this item?')" style="margin-top:6px">
-                  <button class="btn" type="submit">🗑️ Delete</button>
+                <form method="post" action="/erp/inventory/delete/{{ r[0] }}" style="margin-top:4px">
+                  <button class="btn-danger" type="submit">🗑️ Delete</button>
                 </form>
               </details>
             </td>
@@ -197,21 +202,21 @@
       </table>
     </div>
 
+    <!-- RECENT TRANSACTIONS -->
     <div class="card" style="margin-top:16px">
-      <h3>Recent Purchases & Sales</h3>
+      <h3>Recent Transactions</h3>
       <table>
         <thead>
           <tr>
-            <th>ID</th><th>Time</th><th>Item</th><th>Code</th><th>Type</th><th>Qty</th><th>Unit Price</th><th>Total</th><th>Profit</th><th>From/To</th><th>Note</th>
+            <th>Time</th><th>Item</th><th>Code</th><th>Type</th><th>Qty</th><th>Unit Price</th><th>Total</th><th>Profit</th><th>Party</th><th>Note</th>
           </tr>
         </thead>
         <tbody>
           {% for t in last_tx %}
           <tr>
-            <td>{{ t[0] }}</td>
-            <td class="muted">{{ t[1] }}</td>
+            <td>{{ t[1] }}</td>
             <td>{{ t[2] }}</td>
-            <td class="muted">{{ t[3] or '' }}</td>
+            <td>{{ t[3] or '' }}</td>
             <td>{{ t[4] }}</td>
             <td>{{ '%.4f' % (t[5] or 0) }}</td>
             <td>₹ {{ '%.2f' % (t[6] or 0) }}</td>
@@ -224,42 +229,6 @@
         </tbody>
       </table>
     </div>
-
-    <div style="text-align:center;margin-top:18px" class="muted">
-      Tip: Just enter Buy or Sell. Average price, stock value and profit are automatic. Item code fills itself.
-    </div>
   </div>
-
-  <script>
-    const qty = document.querySelector('input[name="quantity"]');
-    const price = document.querySelector('#unit_price');
-    const calc = document.querySelector('#calc');
-    function updateTotal(){
-      const q = parseFloat(qty?.value||0);
-      const p = parseFloat(price?.value||0);
-      calc.textContent = "Total: ₹ " + (q*p).toFixed(2);
-    }
-    qty?.addEventListener('input', updateTotal);
-    price?.addEventListener('input', updateTotal);
-
-    document.querySelectorAll('#invTable thead th').forEach((th, idx)=>{
-      th.style.cursor='pointer';
-      th.addEventListener('click', ()=>{
-        const tbody = document.querySelector('#invTable tbody');
-        const rows = Array.from(tbody.querySelectorAll('tr'));
-        const dir = th.dataset.dir === 'asc' ? 'desc' : 'asc';
-        th.dataset.dir = dir;
-        rows.sort((a,b)=>{
-          const A = a.children[idx].innerText.replace(/[₹,]/g,'');
-          const B = b.children[idx].innerText.replace(/[₹,]/g,'');
-          const aNum = parseFloat(A); const bNum = parseFloat(B);
-          const bothNum = !isNaN(aNum) && !isNaN(bNum);
-          if(bothNum){ return dir==='asc' ? aNum-bNum : bNum-aNum; }
-          return dir==='asc' ? A.localeCompare(B) : B.localeCompare(A);
-        });
-        rows.forEach(r=>tbody.appendChild(r));
-      });
-    });
-  </script>
 </body>
 </html>
